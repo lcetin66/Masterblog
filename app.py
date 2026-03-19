@@ -28,15 +28,7 @@ def add():
             blog_posts = json.load(posts_file)
 
         # Generate a new ID
-        if blog_posts:
-            new_id = None
-            for post in blog_posts:
-                if post.get("id") == None:
-                    new_id = 1
-                else:
-                    new_id = post.get("id") + 1
-        else:
-            new_id = 1
+        new_id = max((p.get("id", 0) for p in blog_posts), default=0) + 1
 
         new_post = {
             'id': new_id,
