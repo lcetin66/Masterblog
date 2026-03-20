@@ -3,6 +3,23 @@ import json
 
 app = Flask(__name__)
 
+class DBase:
+    def __init__(self, path):
+        self.path = path
+
+    def read(self):
+        with open(self.path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def write(self, data):
+        with open(self.path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+
+    def next_id(self):
+        posts = self.read()
+        return max((p.get("id", 0) for p in posts), default=0) + 1
+
+db = DBase("data/my_blog_posts.json")
 
 
 @app.route('/')
@@ -10,9 +27,7 @@ def index():
     """
     This function displays the blog posts from the JSON file.
     """
-    with open('data/my_blog_posts.json', 'r', encoding="utf-8") as posts_file:
-        blog_posts = json.load(posts_file)
-    return render_template('index.html', posts=blog_posts)
+    return render_template('index.html', posts=db.read())
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():
@@ -20,30 +35,28 @@ def add():
     This function handles adding a new blog post.
     """
     if request.method == 'POST':
-        title = request.form.get('title')
-        author = request.form.get('author')
-        content = request.form.get('content')
-
-        with open('data/my_blog_posts.json', 'r', encoding="utf-8") as posts_file:
-            blog_posts = json.load(posts_file)
-
-        # Generate a new ID
-        new_id = max((p.get("id", 0) for p in blog_posts), default=0) + 1
+        posts = db.read()
 
         new_post = {
-            'id': new_id,
-            'author': author,
-            'title': title,
-            'content': content
+            "id": db.next_id(),
+            "title": request.form.get("title"),
+            "author": request.form.get("author"),
+            "content": request.form.get("content")
         }
 
-        blog_posts.append(new_post)
-        with open('data/my_blog_posts.json', 'w', encoding="utf-8") as posts_file:
-            json.dump(blog_posts, posts_file, indent=4)
+        posts.append(new_post)
+        db.write(posts)
 
         return redirect(url_for('index'))
 
     return render_template('add.html')
+
+@app.route('/delete/<int:post_id>')
+def delete(post_id):
+   posts = db.read()
+   updated = [p for p in posts if p.get("id") != post_id]
+   db.write(updated)
+   return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
