@@ -94,10 +94,11 @@ def update(post_id):
     """
     This function handles updating a blog post.
     """
-    # Fetch the blog posts from the JSON file
+    post = fetch_post_by_id(post_id)
     if post is None:
         # Post not found
         return "Post not found", 404
+
 
     if request.method == 'POST':
         # Update the post in the JSON fil
