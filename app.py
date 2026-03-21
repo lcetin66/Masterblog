@@ -99,7 +99,6 @@ def update(post_id):
         # Post not found
         return "Post not found", 404
 
-
     if request.method == 'POST':
         # Update the post in the JSON fil
         posts = db.read()
